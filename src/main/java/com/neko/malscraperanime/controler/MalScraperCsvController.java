@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/csv")
 public class MalScraperCsvController {
@@ -32,5 +31,12 @@ public class MalScraperCsvController {
         response.setContentType("text/csv");
         response.addHeader("Content-Disposition", "attachment; filename=top-anime.csv");
         csvFileGeneratorService.writeTopAnimesToCsv(malScraperService.topAnime(limit), response.getWriter());
+    }
+
+    @GetMapping("/reviews")
+    public void animeReviews(@RequestParam("page") Integer page, HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv");
+        response.addHeader("Content-Disposition", "attachment; filename=anime_reviews-mal.csv");
+        csvFileGeneratorService.writeReviewsToCsvWeb(malScraperService.reviewsList(page), response.getWriter());
     }
 }

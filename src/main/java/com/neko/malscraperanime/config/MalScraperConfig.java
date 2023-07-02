@@ -8,7 +8,11 @@ import org.springframework.stereotype.Component;
 public class MalScraperConfig {
 
     @Getter
-    @Value("${mal.topanime}")
+    @Value("${mal.topanime.url}")
     private String topAnimeUrl;
+
+    @Getter
+    @Value("${mal.reviews.url}")
+    private String reviewsURL;
 
 }

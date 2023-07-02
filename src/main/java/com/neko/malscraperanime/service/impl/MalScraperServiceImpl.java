@@ -1,6 +1,7 @@
 package com.neko.malscraperanime.service.impl;
 
 import com.neko.malscraperanime.config.MalScraperConfig;
+import com.neko.malscraperanime.model.response.ReviewResponse;
 import com.neko.malscraperanime.model.response.TopAnimeResponse;
 import com.neko.malscraperanime.service.MalScraperService;
 import jakarta.annotation.PostConstruct;
@@ -9,6 +10,8 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +19,13 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-@Slf4j
 public class MalScraperServiceImpl implements MalScraperService {
+
+    private final static Logger log = LoggerFactory.getLogger(MalScraperServiceImpl.class);
 
     private MalScraperConfig malScraperConfig;
 
-    @Autowired
+
     public MalScraperServiceImpl(MalScraperConfig malScraperConfig) {
         this.malScraperConfig = malScraperConfig;
     }
@@ -124,5 +128,37 @@ public class MalScraperServiceImpl implements MalScraperService {
             log.info("done");
         }
         return topAnimeResponses;
+    }
+
+    @Override
+    public List<ReviewResponse> reviewsList(Integer page) throws IOException {
+        List<ReviewResponse> reviews = new ArrayList<>();
+
+        for (int currentPage = 0; currentPage <= page; currentPage++) {
+            String link = malScraperConfig.getReviewsURL().concat(String.valueOf(currentPage));
+            log.info("fetch page => {}", currentPage);
+
+            Document document = Jsoup.connect(link).get();
+            Elements reviewElements = document.getElementsByClass("review-element js-review-element");
+
+            reviewElements.stream().forEach(reviewElement -> {
+                ReviewResponse review = new ReviewResponse();
+                review.setUsername(reviewElement.getElementsByClass("username").select("a").text());
+                review.setAnimeTitle(reviewElement.getElementsByClass("title ga-click").select("a").text());
+                review.setComment(reviewElement.getElementsByClass("text").text().replace("<br>", ""));
+                review.setTags(reviewElement.getElementsByClass("tags").text());
+                review.setReviewedAt(reviewElement.getElementsByClass("update_at").text());
+
+                log.info("username : {}", review.getUsername());
+                log.info("title : {}", review.getAnimeTitle());
+                log.info("comment : {}", review.getComment());
+                log.info("tags : {}", review.getTags());
+                log.info("reviewedAt : {}", review.getReviewedAt());
+
+                reviews.add(review);
+            });
+        }
+
+        return reviews;
     }
 }
